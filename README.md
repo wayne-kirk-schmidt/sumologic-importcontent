@@ -1,11 +1,8 @@
-Sumo Logic Restore
-==================
+Sumo Logic Import Content
+=========================
 
-In the age of DevOps, why not treat your Sumo Logic content as code?
-
-And of course, if you can backup as a code repository, why not be able to restore?
-
-Sumo Logic restore does just that, able to restore either a full or partial backup.
+Want to have a means to copy content into Sumo Logic? 
+This should should be able to help!
 
 Installing the Scripts
 =======================
@@ -46,37 +43,42 @@ Script Names and Purposes
 
 Scripts and Functions:
 
-    1. ./bin/sumologic_restore.py 
+    1. ./bin/sumologic_importcontent.py
 
        the script that imports content
 
-    2. ./bin/sumologic_restore.py -h
+    2. ./bin/sumologic_importcontent.py -h
   
        print a usage message and exit
 
-    3. ./bin/sumologic_restore.py -c <cfgile>
+    3. ./bin/sumologic_importcontent.py -c <cfgile>
 
        use a configuration file for the API key name, API key string
 
-    4. ./bin/sumologic_restore.py -v <integer>
+    4. ./bin/sumologic_importcontent.py -v <integer>
 
        provide increasingly verbose output on the script execution
 
-    5. ./bin/sumologic_restore.py -b <backup_directory>
+    5. ./bin/sumologic_importcontent.py -s <source_file_or_directory>
 
        a path to an existing backup
 
-    6. ./bin/sumologic_restore.py -r <restore_point>
+    6. ./bin/sumologic_importcontent.py -i <import_point>
 
        a restore directory for the imported content
 
+    7. ./bin/sumologic_importcontent.py -a <auth_key>:<auth_secret>
+
+       specify the credentials you want to use
+
+NOTE: in the bin directory is a script genconfig.py, which can create the config file you need.
+
+NOTE: this will create an import folder under Personal, so you can manage the files as you wish.
 
 Uncoming Features:
 ==================
 
 * Provide fixups for the paths and organization ID
-
-* Provide selective backups based on ID or name/string
 
 License
 =======
