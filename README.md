@@ -4,6 +4,13 @@ Sumo Logic Import Content
 Want to have a means to copy content into Sumo Logic? 
 This should should be able to help!
 
+Business Case
+=============
+
+Curious what was the business goals we wanted to solve? 
+
+Please read on in our [writeup](doc/writeup.md)!
+
 Installing the Scripts
 =======================
 

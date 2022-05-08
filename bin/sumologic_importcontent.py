@@ -64,13 +64,13 @@ ARGS = PARSER.parse_args()
 
 DELAY_TIME = .5
 
-IMPORTSRC = dict()
-IMPORTSRC['file'] = dict()
-IMPORTSRC['folder'] = dict()
+IMPORTSRC = {}
+IMPORTSRC['file'] = {}
+IMPORTSRC['folder'] = {}
 
-IMPORTDST = dict()
-IMPORTDST['file'] = dict()
-IMPORTDST['folder'] = dict()
+IMPORTDST = {}
+IMPORTDST['file'] = {}
+IMPORTDST['folder'] = {}
 
 REPORTTAG = 'sumologic-import'
 
@@ -144,7 +144,7 @@ def initialize_variables():
         my_key = os.environ['SUMO_KEY']
 
     except KeyError as myerror:
-        print('Environment Variable Not Set :: {} '.format(myerror.args[0]))
+        print(f'Environment Variable Not Set :: {myerror.args[0]}')
 
     return my_uid, my_key
 
@@ -161,14 +161,14 @@ def resolve_import_sources():
         for myroot, _mysubdirs, myfiles in os.walk(ARGS.IMPORTSRC):
             for myfilename in myfiles:
                 myfilepath = os.path.join(myroot, myfilename)
-                with open(myfilepath) as myfileobject:
+                with open(myfilepath, encoding='utf8') as myfileobject:
                     mycontents = json.load(myfileobject)
                     if 'itemType' not in mycontents:
                         mycontenttype = mycontents['type']
                         if mycontenttype != 'Folder':
                             IMPORTSRC['file'][os.path.abspath(myfilepath)] = 'pending'
     else:
-        with open(ARGS.IMPORTSRC) as myfileobject:
+        with open(ARGS.IMPORTSRC, encoding='utf8') as myfileobject:
             mycontents = json.load(myfileobject)
             if 'itemType' not in mycontents:
                 mycontenttype = mycontents['type']
@@ -200,7 +200,7 @@ def create_import_point(source):
         folder_tag = "EXISTING"
 
     if ARGS.verbose > 5:
-        print('{}:: {} - {}'.format(folder_tag, folder_id, folder_name))
+        print(f'{folder_tag}:: {folder_id} - {folder_name}')
 
     IMPORTDST['folder'][folder_name] = folder_id
 
@@ -212,25 +212,25 @@ def import_content(source, parentid):
     """
 
     for sourcefile in IMPORTSRC['file']:
-        with open(sourcefile, "r") as sourceobject:
+        with open(sourcefile, "r", encoding='utf8') as sourceobject:
             if ARGS.verbose > 5:
-                print('UPLOAD: {}'.format(sourcefile))
+                print(f'UPLOAD: {sourcefile}')
             jsonpayload = json.load(sourceobject)
             result = source.start_import_job(parentid, jsonpayload)
             jobid = result['id']
             status = source.check_import_job_status(parentid, jobid)
             if ARGS.verbose > 9:
-                print('STATUS: {}'.format(status['status']))
+                print(f'STATUS: {status}')
             while status['status'] == 'InProgress':
                 status = source.check_import_job_status(parentid, jobid)
                 if ARGS.verbose > 9:
-                    print('STATUS: {}'.format(status['status']))
+                    print(f'STATUS: {status}')
                 time.sleep(DELAY_TIME)
             IMPORTDST['file'][sourcefile] = status['status']
             if status['status'] == 'Failed':
                 print('----------------------------')
-                print('FILE: {}'.format(sourcefile))
-                print('STATUS: {}'.format(status))
+                print(f'FILE: {sourcefile}')
+                print(f'STATUS: {status}')
                 print('----------------------------')
 
 def print_import_maps():
@@ -241,31 +241,30 @@ def print_import_maps():
     if ARGS.verbose > 8:
         for content_type in IMPORTSRC:
             for keys,values in IMPORTSRC[content_type].items():
-                print('{}: {} - {}'.format(content_type, values, keys))
+                print(f'{content_type}: {values} - {keys}')
 
     if ARGS.verbose > 5:
         for content_type in IMPORTDST:
             for keys,values in IMPORTDST[content_type].items():
-                print('{}: {} - {}'.format(content_type, values, keys))
+                print(f'{content_type}: {values} - {keys}')
 
 def create_import_manifest_file(restoredir, restoreoid):
     """
     Now display the output we want from the RESTORERECORD data structure we made.
     """
-    manifestname = '{}.{}.{}.csv'.format(REPORTTAG, DATESTAMP, TIMESTAMP)
+    manifestname = f'{REPORTTAG}.{DATESTAMP}.{TIMESTAMP}.csv'
     manifestfile = os.path.join(REPORTLOGDIR, manifestname)
 
     if ARGS.verbose > 6:
-        print('Creating Restore-Manifest: {}'.format(manifestfile))
+        print(f'Creating Restore-Manifest: {manifestfile}')
 
-    with open(manifestfile, 'a') as manifestobject:
-        manifestobject.write('{},{},{},{},{}\n'.format("type", "parent_name", \
-                             "parent_oid", "dst_oid", "src_file"))
+    with open(manifestfile, 'a', encoding='utf8') as manifestobject:
+        manifestobject.write(f'{"type"},{"parent_name"},{"parent_oid"}, \
+                             {"dst_oid"}, {"src_file"}\n')
         for content_item in IMPORTDST['file']:
             dst_file = content_item
             dst_oid = IMPORTDST['file'][content_item]
-            manifestobject.write('file,{},{},{},{}\n'.format(restoredir, \
-                                 restoreoid, dst_oid, dst_file))
+            manifestobject.write(f'{"file"},{restoredir},{restoreoid},{dst_oid},{dst_file}\n')
 
 def main():
     """
@@ -310,7 +309,7 @@ class SumoApiClient():
     The class includes the HTTP methods, cmdlets, and init methods
     """
 
-    def __init__(self, access_id, access_key, endpoint=None, cookieFile='cookies.txt'):
+    def __init__(self, access_id, access_key, endpoint=None, cookie_file='cookies.txt'):
         """
         Initializes the Sumo Logic object
         """
@@ -318,7 +317,7 @@ class SumoApiClient():
         self.session.auth = (access_id, access_key)
         self.session.headers = {'content-type': 'application/json', \
             'accept': 'application/json'}
-        cookiejar = http.cookiejar.FileCookieJar(cookieFile)
+        cookiejar = http.cookiejar.FileCookieJar(cookie_file)
         self.session.cookies = cookiejar
         if endpoint is None:
             self.endpoint = self._get_endpoint()
@@ -411,7 +410,7 @@ class SumoApiClient():
         Create a folder
         """
 
-        folderpayload = dict()
+        folderpayload = {}
         folderpayload['name'] = str(myname)
         folderpayload['description'] = str(myname)
         folderpayload['parentId'] = str(myparent)
